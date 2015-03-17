@@ -28,31 +28,32 @@ class Diff {
     private static def diffChildren(current, next, context) {
         def currentChildren = current.children ?: []
         def nextChildren = next.children ?: []
-        def container = context.container
-        def count = Math.max((int) currentChildren.size(), (int) nextChildren.size())
+        def count = Math.max currentChildren.size(), nextChildren.size()
+        if (count == 0) {
+            return
+        }
+
+        ViewGroup view = context.view
 
         for (def i = 0; i < count; i++) {
             def left = currentChildren[i]
             def right = nextChildren[i]
 
             if (left == null) {
-                container.children[i] = [view: right.clone()]
+                def newView = (View) Class.forName("android.widget.${right.viewName}").newInstance(view.context)
+                view.addView newView
                 continue
             }
 
             if (right == null) {
-                container.children.removeAt(i)
+                view.removeViewAt i
                 i--
                 count--
                 continue
             }
 
-            if (container.children[i] == null) {
-                container.children[i] = [:]
-            }
-
             diff(left, right, [
-                    view: container.children[i],
+                    view: view.getChildAt(i),
                     isRoot: false,
             ])
         }
