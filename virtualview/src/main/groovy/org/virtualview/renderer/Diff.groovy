@@ -1,21 +1,27 @@
-package com.virtualview.renderer
+package org.virtualview.renderer
+
+import android.view.View
+import android.view.ViewGroup
 
 class Diff {
 
     static def patch(options) {
-        diff(options.currentTree.root, options.nextTree.root, [
-                container: options.container,
-        ])
+        def context = [
+                view: options.view,
+                isRoot: true,
+                rootView: options.view,
+        ]
+        diff(options.currentTree.root, options.nextTree.root, context)
+        context.rootView
     }
 
     private static def diff(current, next, context) {
-        if (current.type != next.type) {
+        if (current.viewName != next.viewName) {
             replace(current, next, context)
             return
         }
 
         diffAttributes(current, next, context)
-
         diffChildren(current, next, context)
     }
 
@@ -30,12 +36,12 @@ class Diff {
             def right = nextChildren[i]
 
             if (left == null) {
-                container[i] = right.clone()
+                container.children[i] = [view: right.clone()]
                 continue
             }
 
             if (right == null) {
-                container.removeAt(i)
+                container.children.removeAt(i)
                 i--
                 count--
                 continue
@@ -46,7 +52,8 @@ class Diff {
             }
 
             diff(left, right, [
-                    container: container.children[i],
+                    view: container.children[i],
+                    isRoot: false,
             ])
         }
     }
@@ -57,19 +64,25 @@ class Diff {
 
         nextAttrs.each {
             if (!currentAttrs.containsKey(it.key) || currentAttrs.get(it.key) != it.value) {
-                context.container."$it.key" = it.value
+                context.view."$it.key" = it.value
             }
         }
 
         currentAttrs.each {
             if (!nextAttrs.containsKey(it.key)) {
-                context.container.remove(it.key)
+                // TODO: reset view attribute
             }
         }
     }
 
     private static def replace(current, next, context) {
-        def container = context.container
-        container.view = next.clone()
+        View view = context.view
+        def parent = view.parent
+        ((ViewGroup) parent)?.removeView view
+        def newView = (View) Class.forName("android.widget.${next.viewName}").newInstance(view.context)
+        ((ViewGroup) parent)?.addView newView
+        if (context.isRoot) {
+            context.rootView = newView
+        }
     }
 }

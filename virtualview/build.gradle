@@ -7,6 +7,7 @@ buildscript {
     }
 }
 apply plugin: 'com.android.library'
+apply plugin: 'groovyx.grooid.groovy-android'
 apply plugin: 'org.robolectric'
 
 repositories {
@@ -40,5 +41,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'org.codehaus.groovy:groovy:2.4.1:grooid'
     testCompile 'junit:junit:4.12'
+    testCompile 'com.android.support:support-v4:22.0.0'
     testCompile 'org.robolectric:robolectric:2.4'
 }

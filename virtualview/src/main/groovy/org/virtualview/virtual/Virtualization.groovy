@@ -1,4 +1,4 @@
-package com.virtualview.virtual
+package org.virtualview.virtual
 
 class Virtualization {
 
